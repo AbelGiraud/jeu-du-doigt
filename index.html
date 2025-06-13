@@ -50,7 +50,7 @@
 
   let touches = {};
   let colors = {};
-  let roundStarted = false;
+  let gameInProgress = false;
   let winnerId = null;
 
   function randomColor() {
@@ -58,28 +58,44 @@
     return `rgb(${r()}, ${r()}, ${r()})`;
   }
 
-  // Mise à jour des positions et couleurs au toucher
+  // Enregistrement des touches
   canvas.addEventListener('touchstart', e => {
-    if (roundStarted) return;
     for (let t of e.changedTouches) {
       if (!colors[t.identifier]) {
         colors[t.identifier] = randomColor();
       }
       touches[t.identifier] = { x: t.clientX, y: t.clientY };
     }
+
+    // Démarrage automatique si > 1 doigt et jeu pas encore lancé
+    if (!gameInProgress && Object.keys(touches).length > 1) {
+      gameInProgress = true;
+      setTimeout(() => {
+        const ids = Object.keys(touches);
+        if (ids.length > 0) {
+          winnerId = ids[Math.floor(Math.random() * ids.length)];
+          document.getElementById('message').style.display = 'block';
+        }
+        setTimeout(() => {
+          touches = {};
+          colors = {};
+          winnerId = null;
+          document.getElementById('message').style.display = 'none';
+          gameInProgress = false;
+        }, 3000);
+      }, 3000);
+    }
   });
 
-  // Suivre les doigts
+  // Mise à jour des positions pendant le jeu
   canvas.addEventListener('touchmove', e => {
-    if (roundStarted) return;
     for (let t of e.changedTouches) {
       touches[t.identifier] = { x: t.clientX, y: t.clientY };
     }
   });
 
-  // Retirer les doigts
+  // Suppression des doigts levés
   canvas.addEventListener('touchend', e => {
-    if (roundStarted) return;
     for (let t of e.changedTouches) {
       delete touches[t.identifier];
       delete colors[t.identifier];
@@ -97,32 +113,12 @@
     }
   }
 
-  // Boucle d’animation continue
   function animationLoop() {
     drawTouches();
     requestAnimationFrame(animationLoop);
   }
-  animationLoop();
 
-  // 👇 Double tap pour lancer la sélection
-  canvas.addEventListener('dblclick', () => {
-    if (roundStarted) return;
-    if (Object.keys(touches).length > 1) {
-      roundStarted = true;
-      setTimeout(() => {
-        const ids = Object.keys(touches);
-        winnerId = ids[Math.floor(Math.random() * ids.length)];
-        document.getElementById('message').style.display = 'block';
-        setTimeout(() => {
-          touches = {};
-          colors = {};
-          winnerId = null;
-          document.getElementById('message').style.display = 'none';
-          roundStarted = false;
-        }, 3000);
-      }, 3000);
-    }
-  });
+  animationLoop();
 </script>
 
 </body>
