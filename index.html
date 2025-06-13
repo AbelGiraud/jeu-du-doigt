@@ -51,7 +51,7 @@
   let touches = {};
   let colors = {};
   let roundStarted = false;
-  let highlightId = null;
+  let winnerId = null;
 
   function randomColor() {
     const r = () => Math.floor(Math.random() * 256);
@@ -61,8 +61,10 @@
   canvas.addEventListener('touchstart', e => {
     if (roundStarted) return;
     for (let t of e.changedTouches) {
+      if (!colors[t.identifier]) {
+        colors[t.identifier] = randomColor();
+      }
       touches[t.identifier] = { x: t.clientX, y: t.clientY };
-      colors[t.identifier] = randomColor();
     }
   });
 
@@ -87,17 +89,21 @@
       const { x, y } = touches[id];
       ctx.beginPath();
       ctx.arc(x, y, 40, 0, Math.PI * 2);
-      ctx.fillStyle = (highlightId && highlightId !== id) ? 'transparent' : colors[id];
+      if (winnerId && id !== winnerId) {
+        ctx.fillStyle = 'transparent';
+      } else {
+        ctx.fillStyle = colors[id];
+      }
       ctx.fill();
     }
   }
 
-  function animationLoop() {
-    if (!roundStarted) highlightId = null;
+  function gameLoop() {
     drawTouches();
-    requestAnimationFrame(animationLoop);
+    requestAnimationFrame(gameLoop);
   }
-  animationLoop();
+
+  gameLoop();
 
   canvas.addEventListener('touchstart', () => {
     if (roundStarted) return;
@@ -105,12 +111,12 @@
       roundStarted = true;
       setTimeout(() => {
         const ids = Object.keys(touches);
-        highlightId = ids[Math.floor(Math.random() * ids.length)];
+        winnerId = ids[Math.floor(Math.random() * ids.length)];
         document.getElementById('message').style.display = 'block';
         setTimeout(() => {
           touches = {};
           colors = {};
-          highlightId = null;
+          winnerId = null;
           document.getElementById('message').style.display = 'none';
           roundStarted = false;
         }, 3000);
