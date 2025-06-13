@@ -51,10 +51,9 @@
   let colors = {};
   let gameInProgress = false;
   let winnerId = null;
-  let frozenParticipants = {};
 
   function randomColor() {
-    const r = () => Math.floor(Math.random() * 200) + 30; // moins flashy
+    const r = () => Math.floor(Math.random() * 200) + 30;
     return `rgb(${r()}, ${r()}, ${r()})`;
   }
 
@@ -68,17 +67,17 @@
 
     if (!gameInProgress && Object.keys(touches).length > 1) {
       gameInProgress = true;
-      frozenParticipants = { ...touches };
+
       setTimeout(() => {
-        const ids = Object.keys(frozenParticipants);
+        const ids = Object.keys(touches);
         if (ids.length > 0) {
           winnerId = ids[Math.floor(Math.random() * ids.length)];
         }
+
         setTimeout(() => {
           touches = {};
           colors = {};
           winnerId = null;
-          frozenParticipants = {};
           gameInProgress = false;
         }, 3000);
       }, 3000);
@@ -100,25 +99,24 @@
 
   function drawTouches() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const source = winnerId ? frozenParticipants : touches;
-    for (let id in source) {
-      const { x, y } = source[id];
-      const radius = 50;
+    for (let id in touches) {
+      const { x, y } = touches[id];
+      const radius = 65; // légèrement plus gros
+
+      // Masquer tous les cercles sauf le gagnant si un gagnant est défini
+      if (winnerId && id !== winnerId) continue;
+
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2);
 
-      // Style du cercle
       ctx.shadowColor = colors[id];
-      ctx.shadowBlur = winnerId && id === winnerId ? 25 : 10;
-      ctx.fillStyle = (winnerId && id !== winnerId) ? 'transparent' : colors[id];
+      ctx.shadowBlur = winnerId && id === winnerId ? 30 : 15;
+      ctx.fillStyle = colors[id];
       ctx.fill();
 
-      // Bordure blanche
-      if (!winnerId || id === winnerId) {
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = '#fff';
-        ctx.stroke();
-      }
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#fff';
+      ctx.stroke();
 
       ctx.shadowBlur = 0;
     }
@@ -131,5 +129,6 @@
 
   animationLoop();
 </script>
+
 </body>
 </html>
