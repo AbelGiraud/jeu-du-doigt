@@ -45,18 +45,18 @@
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
 
-  // 👇 Support haute densité (iPhone, Retina)
   const dpr = window.devicePixelRatio || 1;
   canvas.width = window.innerWidth * dpr;
   canvas.height = window.innerHeight * dpr;
   canvas.style.width = window.innerWidth + 'px';
   canvas.style.height = window.innerHeight + 'px';
-  ctx.scale(dpr, dpr); // Corrige l’étirement
+  ctx.scale(dpr, dpr);
 
   let touches = {};
   let colors = {};
   let gameInProgress = false;
   let winnerId = null;
+  let pulseStart = performance.now();
 
   function randomColor() {
     const r = () => Math.floor(Math.random() * 200) + 30;
@@ -103,24 +103,23 @@
     }
   });
 
-  function drawTouches() {
+  function drawTouches(timestamp) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const time = (timestamp - pulseStart) / 1000;
+
     for (let id in touches) {
       const { x, y } = touches[id];
-      const radius = 65;
+      const baseRadius = 65;
+      const pulse = 5 * Math.sin(time * 2 + parseInt(id)); // effet de pulsation
+      const radius = baseRadius + pulse;
 
-      // Masquer les autres si gagnant choisi
-      if (winnerId && id !== winnerId) continue;
-
-      ctx.beginPath();
-
-      // 👇 Décalage vertical vers le haut (pour que le doigt ne cache pas)
       const offsetY = y - 15;
 
+      ctx.beginPath();
       ctx.arc(x, offsetY, radius, 0, Math.PI * 2);
 
       ctx.shadowColor = colors[id];
-      ctx.shadowBlur = winnerId && id === winnerId ? 30 : 15;
+      ctx.shadowBlur = (winnerId && id === winnerId) ? 40 : 20;
       ctx.fillStyle = colors[id];
       ctx.fill();
 
@@ -132,13 +131,14 @@
     }
   }
 
-  function animationLoop() {
-    drawTouches();
+  function animationLoop(timestamp) {
+    drawTouches(timestamp);
     requestAnimationFrame(animationLoop);
   }
 
-  animationLoop();
+  requestAnimationFrame(animationLoop);
 </script>
+
 
 </body>
 </html>
