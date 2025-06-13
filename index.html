@@ -108,9 +108,12 @@
     const time = (timestamp - pulseStart) / 1000;
 
     for (let id in touches) {
+      if (winnerId && id !== winnerId) continue; // 👈 Masquer les perdants
+
       const { x, y } = touches[id];
       const baseRadius = 65;
-      const pulse = 5 * Math.sin(time * 2 + parseInt(id)); // effet de pulsation
+
+      const pulse = 6 * Math.sin(time * 6 + parseInt(id)); // 👈 Pulsation plus rapide
       const radius = baseRadius + pulse;
 
       const offsetY = y - 15;
@@ -119,7 +122,7 @@
       ctx.arc(x, offsetY, radius, 0, Math.PI * 2);
 
       ctx.shadowColor = colors[id];
-      ctx.shadowBlur = (winnerId && id === winnerId) ? 40 : 20;
+      ctx.shadowBlur = (winnerId && id === winnerId) ? 35 : 15;
       ctx.fillStyle = colors[id];
       ctx.fill();
 
@@ -138,6 +141,7 @@
 
   requestAnimationFrame(animationLoop);
 </script>
+
 
 
 </body>
