@@ -44,8 +44,14 @@
   <script>
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+
+  // 👇 Support haute densité (iPhone, Retina)
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  ctx.scale(dpr, dpr); // Corrige l’étirement
 
   let touches = {};
   let colors = {};
@@ -101,13 +107,17 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (let id in touches) {
       const { x, y } = touches[id];
-      const radius = 65; // légèrement plus gros
+      const radius = 65;
 
-      // Masquer tous les cercles sauf le gagnant si un gagnant est défini
+      // Masquer les autres si gagnant choisi
       if (winnerId && id !== winnerId) continue;
 
       ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
+
+      // 👇 Décalage vertical vers le haut (pour que le doigt ne cache pas)
+      const offsetY = y - radius * 0.6;
+
+      ctx.arc(x, offsetY, radius, 0, Math.PI * 2);
 
       ctx.shadowColor = colors[id];
       ctx.shadowBlur = winnerId && id === winnerId ? 30 : 15;
