@@ -52,6 +52,7 @@
   let colors = {};
   let gameInProgress = false;
   let winnerId = null;
+  let frozenParticipants = {};
 
   function randomColor() {
     const r = () => Math.floor(Math.random() * 256);
@@ -67,11 +68,15 @@
       touches[t.identifier] = { x: t.clientX, y: t.clientY };
     }
 
-    // Démarrage automatique si > 1 doigt et jeu pas encore lancé
+    // Démarrer automatiquement si > 1 doigt et jeu pas encore lancé
     if (!gameInProgress && Object.keys(touches).length > 1) {
       gameInProgress = true;
+
+      // 🧊 On fige l'état des participants à l’instant du démarrage
+      frozenParticipants = { ...touches };
+
       setTimeout(() => {
-        const ids = Object.keys(touches);
+        const ids = Object.keys(frozenParticipants);
         if (ids.length > 0) {
           winnerId = ids[Math.floor(Math.random() * ids.length)];
           document.getElementById('message').style.display = 'block';
@@ -80,6 +85,7 @@
           touches = {};
           colors = {};
           winnerId = null;
+          frozenParticipants = {};
           document.getElementById('message').style.display = 'none';
           gameInProgress = false;
         }, 3000);
@@ -104,8 +110,9 @@
 
   function drawTouches() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (let id in touches) {
-      const { x, y } = touches[id];
+    const source = winnerId ? frozenParticipants : touches;
+    for (let id in source) {
+      const { x, y } = source[id];
       ctx.beginPath();
       ctx.arc(x, y, 40, 0, Math.PI * 2);
       ctx.fillStyle = (winnerId && id !== winnerId) ? 'transparent' : colors[id];
@@ -120,6 +127,7 @@
 
   animationLoop();
 </script>
+
 
 </body>
 </html>
