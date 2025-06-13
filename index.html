@@ -40,7 +40,6 @@
 </head>
 <body>
   <canvas id="canvas"></canvas>
-  <div id="message">Gagnant !</div>
 
   <script>
   const canvas = document.getElementById('canvas');
@@ -55,11 +54,10 @@
   let frozenParticipants = {};
 
   function randomColor() {
-    const r = () => Math.floor(Math.random() * 256);
+    const r = () => Math.floor(Math.random() * 200) + 30; // moins flashy
     return `rgb(${r()}, ${r()}, ${r()})`;
   }
 
-  // Enregistrement des touches
   canvas.addEventListener('touchstart', e => {
     for (let t of e.changedTouches) {
       if (!colors[t.identifier]) {
@@ -68,39 +66,31 @@
       touches[t.identifier] = { x: t.clientX, y: t.clientY };
     }
 
-    // Démarrer automatiquement si > 1 doigt et jeu pas encore lancé
     if (!gameInProgress && Object.keys(touches).length > 1) {
       gameInProgress = true;
-
-      // 🧊 On fige l'état des participants à l’instant du démarrage
       frozenParticipants = { ...touches };
-
       setTimeout(() => {
         const ids = Object.keys(frozenParticipants);
         if (ids.length > 0) {
           winnerId = ids[Math.floor(Math.random() * ids.length)];
-          document.getElementById('message').style.display = 'block';
         }
         setTimeout(() => {
           touches = {};
           colors = {};
           winnerId = null;
           frozenParticipants = {};
-          document.getElementById('message').style.display = 'none';
           gameInProgress = false;
         }, 3000);
       }, 3000);
     }
   });
 
-  // Mise à jour des positions pendant le jeu
   canvas.addEventListener('touchmove', e => {
     for (let t of e.changedTouches) {
       touches[t.identifier] = { x: t.clientX, y: t.clientY };
     }
   });
 
-  // Suppression des doigts levés
   canvas.addEventListener('touchend', e => {
     for (let t of e.changedTouches) {
       delete touches[t.identifier];
@@ -113,10 +103,24 @@
     const source = winnerId ? frozenParticipants : touches;
     for (let id in source) {
       const { x, y } = source[id];
+      const radius = 50;
       ctx.beginPath();
-      ctx.arc(x, y, 40, 0, Math.PI * 2);
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+
+      // Style du cercle
+      ctx.shadowColor = colors[id];
+      ctx.shadowBlur = winnerId && id === winnerId ? 25 : 10;
       ctx.fillStyle = (winnerId && id !== winnerId) ? 'transparent' : colors[id];
       ctx.fill();
+
+      // Bordure blanche
+      if (!winnerId || id === winnerId) {
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#fff';
+        ctx.stroke();
+      }
+
+      ctx.shadowBlur = 0;
     }
   }
 
@@ -127,6 +131,7 @@
 
   animationLoop();
 </script>
+
 
 
 </body>
