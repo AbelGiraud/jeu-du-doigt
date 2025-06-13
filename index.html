@@ -120,7 +120,6 @@
       const pulse = 6 * Math.sin(time * 6 + parseInt(id));
       const radius = baseRadius + pulse;
 
-      // Apparition flash (dans les 300 ms après sélection)
       const flashIntensity = (winnerId === id && winnerChosenAt && (timestamp - winnerChosenAt) < 300)
         ? 1 - (timestamp - winnerChosenAt) / 300
         : 0;
@@ -137,7 +136,7 @@
       ctx.strokeStyle = '#fff';
       ctx.stroke();
 
-      // Flash blanc à l’apparition
+      // Flash blanc à l’apparition du gagnant
       if (flashIntensity > 0) {
         ctx.beginPath();
         ctx.arc(x, offsetY, radius + 8, 0, Math.PI * 2);
@@ -146,12 +145,12 @@
         ctx.stroke();
       }
 
-      // Cercle intérieur tournant dans le gagnant
-      if (winnerId === id) {
+      // ✅ Cercle tournant uniquement avant le tirage
+      if (!winnerId) {
         const angle = time * 4;
         ctx.beginPath();
         ctx.arc(x, offsetY, radius / 2, angle, angle + Math.PI * 1.5);
-        ctx.strokeStyle = '#ffffff88';
+        ctx.strokeStyle = '#ffffff66';
         ctx.lineWidth = 4;
         ctx.stroke();
       }
