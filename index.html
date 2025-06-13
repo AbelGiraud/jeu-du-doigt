@@ -43,86 +43,87 @@
   <div id="message">Gagnant !</div>
 
   <script>
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 
-    let touches = {};
-    let colors = {};
-    let roundStarted = false;
-    let winnerId = null;
+  let touches = {};
+  let colors = {};
+  let roundStarted = false;
+  let winnerId = null;
 
-    function randomColor() {
-      const r = () => Math.floor(Math.random() * 256);
-      return `rgb(${r()}, ${r()}, ${r()})`;
+  function randomColor() {
+    const r = () => Math.floor(Math.random() * 256);
+    return `rgb(${r()}, ${r()}, ${r()})`;
+  }
+
+  // Mise à jour des positions et couleurs au toucher
+  canvas.addEventListener('touchstart', e => {
+    if (roundStarted) return;
+    for (let t of e.changedTouches) {
+      if (!colors[t.identifier]) {
+        colors[t.identifier] = randomColor();
+      }
+      touches[t.identifier] = { x: t.clientX, y: t.clientY };
     }
+  });
 
-    // Mise à jour des positions et couleurs au toucher
-    canvas.addEventListener('touchstart', e => {
-      if (roundStarted) return;
-      for (let t of e.changedTouches) {
-        if (!colors[t.identifier]) {
-          colors[t.identifier] = randomColor();
-        }
-        touches[t.identifier] = { x: t.clientX, y: t.clientY };
-      }
-    });
-
-    // Suivre les doigts
-    canvas.addEventListener('touchmove', e => {
-      if (roundStarted) return;
-      for (let t of e.changedTouches) {
-        touches[t.identifier] = { x: t.clientX, y: t.clientY };
-      }
-    });
-
-    // Retirer les doigts
-    canvas.addEventListener('touchend', e => {
-      if (roundStarted) return;
-      for (let t of e.changedTouches) {
-        delete touches[t.identifier];
-        delete colors[t.identifier];
-      }
-    });
-
-    function drawTouches() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (let id in touches) {
-        const { x, y } = touches[id];
-        ctx.beginPath();
-        ctx.arc(x, y, 40, 0, Math.PI * 2);
-        ctx.fillStyle = (winnerId && id !== winnerId) ? 'transparent' : colors[id];
-        ctx.fill();
-      }
+  // Suivre les doigts
+  canvas.addEventListener('touchmove', e => {
+    if (roundStarted) return;
+    for (let t of e.changedTouches) {
+      touches[t.identifier] = { x: t.clientX, y: t.clientY };
     }
+  });
 
-    // Boucle d’animation continue
-    function animationLoop() {
-      drawTouches();
-      requestAnimationFrame(animationLoop);
+  // Retirer les doigts
+  canvas.addEventListener('touchend', e => {
+    if (roundStarted) return;
+    for (let t of e.changedTouches) {
+      delete touches[t.identifier];
+      delete colors[t.identifier];
     }
-    animationLoop();
+  });
 
-    // Lancement automatique si > 1 doigt
-    canvas.addEventListener('touchstart', () => {
-      if (roundStarted) return;
-      if (Object.keys(touches).length > 1) {
-        roundStarted = true;
+  function drawTouches() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let id in touches) {
+      const { x, y } = touches[id];
+      ctx.beginPath();
+      ctx.arc(x, y, 40, 0, Math.PI * 2);
+      ctx.fillStyle = (winnerId && id !== winnerId) ? 'transparent' : colors[id];
+      ctx.fill();
+    }
+  }
+
+  // Boucle d’animation continue
+  function animationLoop() {
+    drawTouches();
+    requestAnimationFrame(animationLoop);
+  }
+  animationLoop();
+
+  // 👇 Double tap pour lancer la sélection
+  canvas.addEventListener('dblclick', () => {
+    if (roundStarted) return;
+    if (Object.keys(touches).length > 1) {
+      roundStarted = true;
+      setTimeout(() => {
+        const ids = Object.keys(touches);
+        winnerId = ids[Math.floor(Math.random() * ids.length)];
+        document.getElementById('message').style.display = 'block';
         setTimeout(() => {
-          const ids = Object.keys(touches);
-          winnerId = ids[Math.floor(Math.random() * ids.length)];
-          document.getElementById('message').style.display = 'block';
-          setTimeout(() => {
-            touches = {};
-            colors = {};
-            winnerId = null;
-            document.getElementById('message').style.display = 'none';
-            roundStarted = false;
-          }, 3000);
+          touches = {};
+          colors = {};
+          winnerId = null;
+          document.getElementById('message').style.display = 'none';
+          roundStarted = false;
         }, 3000);
-      }
-    });
-  </script>
+      }, 3000);
+    }
+  });
+</script>
+
 </body>
 </html>
