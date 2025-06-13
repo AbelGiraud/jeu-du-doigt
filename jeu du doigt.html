@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jeu du Doigt</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Jeu du Doigt">
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #111;
+      color: #fff;
+      font-family: sans-serif;
+      overflow: hidden;
+      height: 100%;
+      touch-action: none;
+    }
+    #canvas {
+      width: 100vw;
+      height: 100vh;
+      touch-action: none;
+      background: #000;
+    }
+    #message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2em;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px 40px;
+      border-radius: 12px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div id="message">Gagnant !</div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let touches = {};
+    let colors = {};
+    let roundStarted = false;
+
+    function randomColor() {
+      const r = () => Math.floor(Math.random() * 256);
+      return `rgb(${r()}, ${r()}, ${r()})`;
+    }
+
+    canvas.addEventListener('touchstart', e => {
+      if (roundStarted) return;
+      for (let t of e.changedTouches) {
+        touches[t.identifier] = { x: t.clientX, y: t.clientY };
+        colors[t.identifier] = randomColor();
+      }
+      drawTouches();
+    });
+
+    canvas.addEventListener('touchmove', e => {
+      if (roundStarted) return;
+      for (let t of e.changedTouches) {
+        touches[t.identifier] = { x: t.clientX, y: t.clientY };
+      }
+      drawTouches();
+    });
+
+    canvas.addEventListener('touchend', e => {
+      if (roundStarted) return;
+      for (let t of e.changedTouches) {
+        delete touches[t.identifier];
+        delete colors[t.identifier];
+      }
+      drawTouches();
+    });
+
+    function drawTouches(highlightId = null) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let id in touches) {
+        const { x, y } = touches[id];
+        ctx.beginPath();
+        ctx.arc(x, y, 40, 0, Math.PI * 2);
+        ctx.fillStyle = (highlightId && highlightId !== id) ? 'transparent' : colors[id];
+        ctx.fill();
+      }
+    }
+
+    canvas.addEventListener('touchstart', () => {
+      if (roundStarted) return;
+      if (Object.keys(touches).length > 1) {
+        roundStarted = true;
+        setTimeout(() => {
+          const ids = Object.keys(touches);
+          const winner = ids[Math.floor(Math.random() * ids.length)];
+          drawTouches(winner);
+          document.getElementById('message').style.display = 'block';
+          setTimeout(() => {
+            touches = {};
+            colors = {};
+            drawTouches();
+            document.getElementById('message').style.display = 'none';
+            roundStarted = false;
+          }, 3000);
+        }, 3000);
+      }
+    });
+  </script>
+</body>
+</html>
