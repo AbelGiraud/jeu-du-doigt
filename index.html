@@ -57,6 +57,7 @@
   let gameInProgress = false;
   let winnerId = null;
   let pulseStart = performance.now();
+  let winnerChosenAt = null;
 
   function randomColor() {
     const r = () => Math.floor(Math.random() * 200) + 30;
@@ -78,12 +79,14 @@
         const ids = Object.keys(touches);
         if (ids.length > 0) {
           winnerId = ids[Math.floor(Math.random() * ids.length)];
+          winnerChosenAt = performance.now();
         }
 
         setTimeout(() => {
           touches = {};
           colors = {};
           winnerId = null;
+          winnerChosenAt = null;
           gameInProgress = false;
         }, 3000);
       }, 3000);
@@ -108,27 +111,50 @@
     const time = (timestamp - pulseStart) / 1000;
 
     for (let id in touches) {
-      if (winnerId && id !== winnerId) continue; // 👈 Masquer les perdants
+      if (winnerId && id !== winnerId) continue;
 
       const { x, y } = touches[id];
+      const offsetY = y - 15;
       const baseRadius = 65;
 
-      const pulse = 6 * Math.sin(time * 6 + parseInt(id)); // 👈 Pulsation plus rapide
+      const pulse = 6 * Math.sin(time * 6 + parseInt(id));
       const radius = baseRadius + pulse;
 
-      const offsetY = y - 15;
+      // Apparition flash (dans les 300 ms après sélection)
+      const flashIntensity = (winnerId === id && winnerChosenAt && (timestamp - winnerChosenAt) < 300)
+        ? 1 - (timestamp - winnerChosenAt) / 300
+        : 0;
 
       ctx.beginPath();
       ctx.arc(x, offsetY, radius, 0, Math.PI * 2);
 
       ctx.shadowColor = colors[id];
-      ctx.shadowBlur = (winnerId && id === winnerId) ? 35 : 15;
+      ctx.shadowBlur = (winnerId && id === winnerId) ? 40 + 10 * Math.sin(time * 10) : 20;
       ctx.fillStyle = colors[id];
       ctx.fill();
 
       ctx.lineWidth = 2;
       ctx.strokeStyle = '#fff';
       ctx.stroke();
+
+      // Flash blanc à l’apparition
+      if (flashIntensity > 0) {
+        ctx.beginPath();
+        ctx.arc(x, offsetY, radius + 8, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255,255,255,${flashIntensity})`;
+        ctx.lineWidth = 8;
+        ctx.stroke();
+      }
+
+      // Cercle intérieur tournant dans le gagnant
+      if (winnerId === id) {
+        const angle = time * 4;
+        ctx.beginPath();
+        ctx.arc(x, offsetY, radius / 2, angle, angle + Math.PI * 1.5);
+        ctx.strokeStyle = '#ffffff88';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      }
 
       ctx.shadowBlur = 0;
     }
@@ -141,6 +167,7 @@
 
   requestAnimationFrame(animationLoop);
 </script>
+
 
 
 
